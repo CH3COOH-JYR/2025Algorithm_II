@@ -334,21 +334,29 @@ class Graph:
 
     def show(self):
         try:
+            import matplotlib
+            # 设置matplotlib使用非交互式后端，避免GUI相关问题
+            matplotlib.use('Agg')
             import matplotlib.pyplot as plt
             import networkx as nx
         except ImportError:
-            print("Matplotlib or NetworkX not installed. Cannot visualize.")
+            print("Matplotlib或NetworkX未安装，无法可视化。")
             return
 
-        G_nx = nx.Graph()
-        for u, neighbors in self.graph.items():
-            for v in neighbors:
-                G_nx.add_edge(self.reverse_node_mapping[u], self.reverse_node_mapping[v])
-        
-        plt.figure(figsize=(10, 10))
-        nx.draw(G_nx, with_labels=True, node_size=50, font_size=8)
-        plt.savefig("graph_visualization.png")
-        print("Graph visualization saved to graph_visualization.png")
+        try:
+            G_nx = nx.Graph()
+            for u, neighbors in self.graph.items():
+                for v in neighbors:
+                    G_nx.add_edge(self.reverse_node_mapping[u], self.reverse_node_mapping[v])
+            
+            plt.figure(figsize=(10, 10))
+            nx.draw(G_nx, with_labels=True, node_size=50, font_size=8)
+            plt.savefig("graph_visualization.png", dpi=150, bbox_inches='tight')
+            plt.close()  # 关闭图形以释放内存
+            print("图的可视化已保存到 graph_visualization.png")
+        except Exception as e:
+            print(f"生成图的可视化时出错: {e}")
+            print("跳过可视化步骤，继续执行其他任务。")
 
     def show_coreness(self):
         # This would require calculating coreness first
