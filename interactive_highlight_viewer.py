@@ -43,7 +43,7 @@ class InteractiveHighlightViewer:
         ttk.Button(control_frame, text="Load Graph", 
                   command=self.load_graph_file).pack(side=tk.LEFT, padx=5)
         
-        ttk.Button(control_frame, text="Load Demo Graph", 
+        ttk.Button(control_frame, text="Load Test Dataset", 
                   command=self.load_demo_graph).pack(side=tk.LEFT, padx=5)
         
         # Algorithm buttons
@@ -131,14 +131,14 @@ class InteractiveHighlightViewer:
             self.load_graph(filename)
     
     def load_demo_graph(self):
-        """Load demo graph"""
+        """Load test graph"""
         demo_files = []
-        if os.path.exists("demo_graphs"):
-            demo_files = [f"demo_graphs/{f}" for f in os.listdir("demo_graphs") 
+        if os.path.exists("test_datasets"):
+            demo_files = [f"test_datasets/{f}" for f in os.listdir("test_datasets") 
                          if f.endswith('.txt')]
         
         if not demo_files:
-            messagebox.showerror("Error", "No demo graphs found")
+            messagebox.showerror("Error", "No test datasets found")
             return
         
         # Simple selection dialog
@@ -165,10 +165,11 @@ class InteractiveHighlightViewer:
                  font=('Arial', 10)).pack(pady=10)
     
     def load_default_graph(self):
-        """Load default demo graph if available"""
+        """Load default test graph if available"""
         default_graphs = [
-            "demo_graphs/demo_cliques_80.txt",
-            "demo_graphs/demo_main_300_1000.txt"
+            "test_datasets/multi_clique_80.txt",      # Small graph with cliques
+            "test_datasets/community_300.txt",        # Medium graph with communities
+            "test_datasets/scale_free_500.txt"        # Medium scale-free graph
         ]
         
         for graph_file in default_graphs:
