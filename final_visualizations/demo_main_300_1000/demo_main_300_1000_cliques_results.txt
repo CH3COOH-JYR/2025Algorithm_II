@@ -1,0 +1,17 @@
+Maximal Cliques Detection Results
+Execution time: 0.001 seconds
+Total cliques: 804
+Max clique size: 3
+Average clique size: 2.17
+
+Largest cliques:
+Clique 1 (size 3): [1, 2, 15]
+Clique 2 (size 3): [1, 14, 22]
+Clique 3 (size 3): [1, 3, 20]
+Clique 4 (size 3): [1, 20, 36]
+Clique 5 (size 3): [1, 15, 20]
+Clique 6 (size 3): [1, 22, 36]
+Clique 7 (size 3): [3, 4, 35]
+Clique 8 (size 3): [3, 5, 49]
+Clique 9 (size 3): [3, 5, 18]
+Clique 10 (size 3): [3, 5, 39]
