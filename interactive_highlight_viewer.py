@@ -184,6 +184,7 @@ class InteractiveHighlightViewer:
             
             # Load graph
             self.graph = Graph(filename)
+            self.graph.filename = filename  # Store filename for result saving
             
             # Calculate layout once
             print("Computing layout...")
@@ -218,39 +219,93 @@ class InteractiveHighlightViewer:
         """Run all algorithms and store results"""
         print("Running algorithms...")
         
+        # Create output directories
+        import os
+        os.makedirs('algorithm_results', exist_ok=True)
+        os.makedirs('static_images', exist_ok=True)
+        
         self.algorithm_results = {}
         
+        # Get graph name for file naming
+        graph_name = os.path.basename(getattr(self.graph, 'filename', 'graph')).replace('.txt', '')
+        
         try:
+            import time
+            
             # k-core decomposition
             print("  Running k-core decomposition...")
+            start_time = time.time()
             core_numbers = nx.core_number(self.graph.G)
+            elapsed_time = time.time() - start_time
+            
             self.algorithm_results['k_core'] = {
                 'core_numbers': core_numbers,
                 'max_core': max(core_numbers.values()) if core_numbers else 0
             }
             
+            # Save k-core results
+            with open(f'algorithm_results/{graph_name}_kcore.txt', 'w') as f:
+                f.write(f"k-core decomposition results\n")
+                f.write(f"Execution time: {elapsed_time:.3f}s\n")
+                f.write(f"Max core number: {max(core_numbers.values()) if core_numbers else 0}\n")
+                f.write(f"Nodes and their core numbers:\n")
+                for mapped_node in sorted(core_numbers.keys()):
+                    orig_node = self.graph.reverse_mapping[mapped_node]
+                    coreness = core_numbers[mapped_node]
+                    f.write(f"{orig_node} {coreness}\n")
+            
             # Densest subgraph
             print("  Running densest subgraph...")
+            start_time = time.time()
             density, densest_nodes = nx.algorithms.approximation.densest_subgraph(self.graph.G)
+            elapsed_time = time.time() - start_time
+            
             self.algorithm_results['densest'] = {
                 'density': density,
                 'nodes': densest_nodes,
                 'size': len(densest_nodes)
             }
             
+            # Save densest subgraph results
+            with open(f'algorithm_results/{graph_name}_densest.txt', 'w') as f:
+                f.write(f"Densest subgraph results\n")
+                f.write(f"Execution time: {elapsed_time:.3f}s\n")
+                f.write(f"Density: {density:.6f}\n")
+                f.write(f"Subgraph size: {len(densest_nodes)} nodes\n")
+                f.write(f"Nodes in densest subgraph:\n")
+                orig_nodes = [self.graph.reverse_mapping[node] for node in densest_nodes]
+                orig_nodes.sort()
+                f.write(" ".join(map(str, orig_nodes)) + "\n")
+            
             # Maximal cliques (only for smaller graphs)
             if self.graph.G.number_of_nodes() <= 1000:
                 print("  Running maximal cliques...")
+                start_time = time.time()
                 cliques = list(nx.find_cliques(self.graph.G))
+                elapsed_time = time.time() - start_time
+                
                 self.algorithm_results['cliques'] = {
                     'cliques': cliques,
                     'count': len(cliques),
                     'max_size': max(len(c) for c in cliques) if cliques else 0
                 }
+                
+                # Save cliques results
+                with open(f'algorithm_results/{graph_name}_cliques.txt', 'w') as f:
+                    f.write(f"Maximal cliques results\n")
+                    f.write(f"Execution time: {elapsed_time:.3f}s\n")
+                    f.write(f"Number of maximal cliques: {len(cliques)}\n")
+                    f.write(f"Max clique size: {max(len(c) for c in cliques) if cliques else 0}\n")
+                    f.write(f"All maximal cliques:\n")
+                    for clique in cliques:
+                        orig_clique = [self.graph.reverse_mapping[node] for node in clique]
+                        orig_clique.sort()
+                        f.write(" ".join(map(str, orig_clique)) + "\n")
             
             # k-clique densest (k=3)
             if self.graph.G.number_of_nodes() <= 1000:
                 print("  Running k-clique densest...")
+                start_time = time.time()
                 all_cliques = list(nx.find_cliques(self.graph.G))
                 k_cliques = [c for c in all_cliques if len(c) >= 3]
                 
@@ -265,13 +320,30 @@ class InteractiveHighlightViewer:
                             best_density = density
                             best_clique = clique
                     
+                    elapsed_time = time.time() - start_time
+                    
                     self.algorithm_results['k_clique'] = {
                         'density': best_density,
                         'nodes': best_clique,
                         'size': len(best_clique)
                     }
+                    
+                    # Save k-clique results
+                    with open(f'algorithm_results/{graph_name}_kclique.txt', 'w') as f:
+                        f.write(f"k-clique densest subgraph results (k=3)\n")
+                        f.write(f"Execution time: {elapsed_time:.3f}s\n")
+                        f.write(f"Best density: {best_density:.6f}\n")
+                        f.write(f"k-clique size: {len(best_clique)} nodes\n")
+                        f.write(f"Nodes in k-clique densest subgraph:\n")
+                        orig_clique = [self.graph.reverse_mapping[node] for node in best_clique]
+                        orig_clique.sort()
+                        f.write(" ".join(map(str, orig_clique)) + "\n")
             
             print("All algorithms completed!")
+            print(f"Results saved to algorithm_results/ directory")
+            
+            # Auto-save static images for all algorithm results
+            self.save_all_static_images()
             
         except Exception as e:
             print(f"Error running algorithms: {e}")
@@ -462,6 +534,51 @@ class InteractiveHighlightViewer:
                 messagebox.showinfo("Success", f"View saved: {filename}")
             except Exception as e:
                 messagebox.showerror("Error", f"Save failed: {e}")
+    
+    def save_all_static_images(self):
+        """Save static images for all algorithm results"""
+        if not self.graph:
+            return
+        
+        # Get graph name for file naming
+        graph_name = os.path.basename(getattr(self.graph, 'filename', 'graph')).replace('.txt', '')
+        
+        algorithms = ["original", "k_core", "densest", "cliques", "k_clique"]
+        algorithm_names = {
+            "original": "Original Graph",
+            "k_core": "k-core Results", 
+            "densest": "Densest Subgraph",
+            "cliques": "Maximal Cliques",
+            "k_clique": "k-clique Densest"
+        }
+        
+        print("Saving static images...")
+        
+        for algo in algorithms:
+            # Skip algorithms that weren't run
+            if algo != "original" and algo not in self.algorithm_results:
+                continue
+                
+            # Set current highlight
+            old_highlight = self.current_highlight
+            self.current_highlight = algo
+            
+            # Update display
+            self.update_display()
+            
+            # Save image
+            filename = f"static_images/{graph_name}_{algo}.png"
+            try:
+                self.fig.savefig(filename, dpi=300, bbox_inches='tight')
+                print(f"  Saved: {filename}")
+            except Exception as e:
+                print(f"  Error saving {filename}: {e}")
+        
+        # Restore original highlight
+        self.current_highlight = old_highlight
+        self.update_display()
+        
+        print("All static images saved to static_images/ directory")
 
 def main():
     """Main function"""

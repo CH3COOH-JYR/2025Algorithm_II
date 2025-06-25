@@ -1,0 +1,6 @@
+k-clique densest subgraph results (k=3)
+Execution time: 0.000s
+Best density: 8.000000
+k-clique size: 9 nodes
+Nodes in k-clique densest subgraph:
+26 27 28 29 30 31 32 33 34

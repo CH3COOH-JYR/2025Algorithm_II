@@ -1,0 +1,6 @@
+Densest subgraph results
+Execution time: 0.001s
+Density: 3.000000
+Subgraph size: 7 nodes
+Nodes in densest subgraph:
+14 15 16 17 18 19 20
